@@ -1,71 +1,66 @@
-# Testing Strategy and Results
+# Testing and verification
 
 ## Test organization
 
-The project keeps test programs separate from library modules and demonstration applications.
+The test programs are standalone executables that link to `libnumerix.a`, except `test_allocation_failure`, which links an isolated build of the legacy interpolation source compiled with a `malloc` substitution.
 
-| File / target | Focus |
+| Test file or group | Coverage |
 |---|---|
-| `tests/test_root_finding.c` | Root-finding correctness, expected roots, boundary and invalid inputs |
-| `tests/test_differentiation.c` | Derivative estimates, expected numerical values, invalid parameters and callback results |
-| `tests/test_interpolation.c` | Interpolation/extrapolation, known nodes, duplicate nodes, empty/invalid inputs and non-finite values |
-| `tests/test_robustness.c` | 256-point cases, unchanged input arrays, repeated calls, allocation-size overflow, duplicate nodes |
-| `tests/test_allocation_failure.c` | Controlled allocation failure and successful retry for Newton interpolation |
-| `mingw32-make test` | Runs the first four suites |
-| `mingw32-make test-memory` | Builds and runs the dedicated allocation-failure injection test |
+| `test_root_finding.c` | Legacy bisection, Newton-Raphson, secant, invalid inputs, and non-finite behavior |
+| `test_differentiation.c` | Legacy forward, backward, and central differences, invalid inputs, and non-finite behavior |
+| `test_interpolation.c` | Legacy linear, Lagrange, and Newton interpolation and boundary/error cases |
+| `test_robustness.c` | Larger inputs, unchanged arrays, repeated calls, allocation-size overflow, and duplicate nodes |
+| `test_allocation_failure.c` | Deterministic allocation failure and successful retry |
+| `test_advanced_algorithms.c` | Analytical checks for dense vectors/matrices, partial pivoting, LU reconstruction, composite integrals, golden-section minimization, and forward/backward RK4 |
+| `test_phase*.c` | NUMERIX core, adapters, expressions, piecewise helpers, recommendation/fallback, portfolio, diagnostics, reports, limits, validation, and CLI |
 
-## Test categories
+Phase tests are integration/smoke tests, not full verification of every behavior in their module. In particular they do not establish the correctness of the accuracy, timing, reliability, or numerical condition metrics.
 
-The test suite is intended to cover:
+## Current recorded run
 
-- ordinary cases with known answers;
-- endpoint, single-point, and other boundary behavior where applicable;
-- invalid arguments such as NULL callbacks/arrays, invalid tolerances or step sizes, duplicate interpolation nodes, and non-finite values;
-- larger interpolation inputs;
-- unchanged caller-owned arrays;
-- repeated allocation/free paths;
-- impossible allocation-size arithmetic;
-- deterministic allocation failure; and
-- recovery after a failed allocation.
+Environment: Windows workspace, MinGW GCC (`gcc`), `mingw32-make`. The exact output from the current `mingw32-make test` run is saved in [`evidence/current_make_test.txt`](evidence/current_make_test.txt).
 
-A passing test establishes the behavior checked by that test, not correctness for every possible input.
-
-## Recorded Windows results
-
-Environment: Windows, MinGW GCC 6.3.0, `mingw32-make`.
-
-| Test suite | Passed | Failed |
+| Group | Passed | Failed |
 |---|---:|---:|
-| Root finding | 53 | 0 |
-| Differentiation | 58 | 0 |
-| Interpolation | 49 | 0 |
-| Robustness | 8 | 0 |
-| **`mingw32-make test`** | **168** | **0** |
-| **`mingw32-make test-memory`** | **2** | **0** |
-| **Combined total across both commands** | **170** | **0** |
+| Legacy root finding | 53 | 0 |
+| Legacy differentiation | 58 | 0 |
+| Legacy interpolation | 49 | 0 |
+| Legacy robustness | 8 | 0 |
+| Allocation-failure injection | 2 | 0 |
+| **Counted assertions** | **170** | **0** |
+| Advanced algorithm suite | 1 successful executable | 0 failed exits |
+| NUMERIX phase executables | 18 successful exits | 0 failed exits |
 
-The 2 allocation-failure checks are a separate target and are not included in the 168 checks reported by `mingw32-make test`.
+`mingw32-make -B all` rebuilt the static library, CLI, demos, and tests with `-Wall -Wextra -Wpedantic` and no warnings. CLI runs of help, version, expression-backed root finding, expression-backed differentiation, and an unsupported command were also checked manually.
 
-## Reproduce on Windows
+## Reproduce
 
-From the project root:
+Windows with MinGW:
 
-```bat
-mingw32-make clean
+```sh
 mingw32-make all
 mingw32-make test
 mingw32-make test-memory
 ```
 
-To capture the allocation-failure output:
+Linux with GNU Make:
 
-```bat
-mingw32-make test-memory > documentation\evidence\allocation_failure_windows.txt 2>&1
-type documentation\evidence\allocation_failure_windows.txt
+```sh
+make all
+make test
+make test-memory
 ```
 
-The project maintainer should capture the normal test output as well if the course requires committed evidence for every suite.
+CMake/CTest:
 
-## Sanitizer record
+```sh
+cmake -S . -B build-cmake
+cmake --build build-cmake --parallel
+ctest --test-dir build-cmake --output-on-failure
+```
 
-AddressSanitizer and UndefinedBehaviorSanitizer were reported as passing in a Linux environment with no sanitizer diagnostics for the exercised suites. The Windows test run confirms compilation and test execution with MinGW, but it is not a Windows sanitizer result. Preserve the actual logs used to support these statements and update this section if a future run differs.
+CMake/CTest could not be executed in the current workspace because CMake is not installed. Linux and MSVC builds have not been run locally. A GitHub Actions workflow was added to run GCC and Clang on Linux and MSVC on Windows; that workflow remains unverified until CI executes.
+
+## Sanitizers
+
+Sanitizer validation is outstanding for the current NUMERIX modules. Historical documentation mentioned sanitizer runs on the legacy code, but no current sanitizer log was available for this audit; no current sanitizer pass is claimed.

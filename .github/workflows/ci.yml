@@ -1,0 +1,37 @@
+name: NUMERIX CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure with CMake
+        run: cmake -S . -B build-cmake -DCMAKE_C_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Debug
+      - name: Build with CMake
+        run: cmake --build build-cmake --parallel
+      - name: Run CTest
+        run: ctest --test-dir build-cmake --output-on-failure
+      - name: Build and test with Make
+        run: |
+          make all
+          make test
+          make test-memory
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure with MSVC
+        run: cmake -S . -B build-cmake -A x64 -DCMAKE_BUILD_TYPE=Debug
+      - name: Build with MSVC
+        run: cmake --build build-cmake --config Debug --parallel
+      - name: Run CTest
+        run: ctest --test-dir build-cmake -C Debug --output-on-failure

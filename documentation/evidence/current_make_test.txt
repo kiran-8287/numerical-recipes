@@ -1,0 +1,376 @@
+﻿Root: 1.99999999988
+Simpson integral: -3
+Phase 17 CLI execution and capability reporting OK
+mingw32-make : NOT_SUPPORTED: this operation is not implemented by the current library
+At line:2 char:12
++ $makeLog = mingw32-make test 2>&1; $makeLog | Out-File -FilePath docu ...
++            ~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (NOT_SUPPORTED: ...current library:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Phase 11 reliability report OK
+Phase 12 step execution OK
+Phase 3 piecewise engine OK
+Phase 0 core API OK
+Phase 1 migration API OK
+Phase 10 reference comparison OK
+Phase 15 convergence monitoring OK
+Forward Difference Error: Function pointer is NULL.
+Forward Difference Error: x must be finite.
+Forward Difference Error: x must be finite.
+Forward Difference Error: h must be finite and positive.
+Forward Difference Error: h must be finite and positive.
+Forward Difference Error: h must be finite and positive.
+Forward Difference Error: h must be finite and positive.
+Forward Difference Error: x + h is not a valid distinct point.
+Forward Difference Error: x + h is not a valid distinct point.
+Forward Difference Error: Function returned a non-finite value.
+Forward Difference Error: Function returned a non-finite value.
+Forward Difference Error: Function returned a non-finite value.
+Forward Difference Error: x + h is not a valid distinct point.
+Backward Difference Error: Function pointer is NULL.
+Backward Difference Error: x must be finite.
+Backward Difference Error: x must be finite.
+Backward Difference Error: h must be finite and positive.
+Backward Difference Error: h must be finite and positive.
+Backward Difference Error: h must be finite and positive.
+Backward Difference Error: h must be finite and positive.
+Backward Difference Error: x - h is not a valid distinct point.
+Backward Difference Error: x - h is not a valid distinct point.
+Backward Difference Error: Function returned a non-finite value.
+Backward Difference Error: Function returned a non-finite value.
+Backward Difference Error: Function returned a non-finite value.
+Backward Difference Error: x - h is not a valid distinct point.
+Central Difference Error: Function pointer is NULL.
+Central Difference Error: x must be finite.
+Central Difference Error: x must be finite.
+Central Difference Error: h must be finite and positive.
+Central Difference Error: h must be finite and positive.
+Central Difference Error: h must be finite and positive.
+Central Difference Error: h must be finite and positive.
+Central Difference Error: x + h is not a valid distinct point.
+Central Difference Error: x + h is not a valid distinct point.
+Central Difference Error: x - h is not a valid distinct point.
+Central Difference Error: Function returned a non-finite value.
+Central Difference Error: Function returned a non-finite value.
+Central Difference Error: Function returned a non-finite value.
+Central Difference Error: x + h is not a valid distinct point.
+====================================
+ NUMERICAL DIFFERENTIATION TESTS
+====================================
+
+--- Forward Difference ---
+[PASS] Square at x=3, h=0.1
+[PASS] Square at x=0, h=0.1
+[PASS] Square at negative x
+[PASS] Linear function
+[PASS] Constant function
+[PASS] Cube at x=2, h=0.1
+[PASS] NULL function pointer
+[PASS] x is NAN
+[PASS] x is infinity
+[PASS] h is zero
+[PASS] h is negative
+[PASS] h is NAN
+[PASS] h is infinity
+[PASS] h too small to change x
+[PASS] x + h overflows
+[PASS] Function returns NAN
+[PASS] Function returns infinity
+[PASS] Nearby function value invalid
+[PASS] Derivative calculation overflows
+
+--- Backward Difference ---
+[PASS] Square at x=3, h=0.1
+[PASS] Square at x=0, h=0.1
+[PASS] Square at negative x
+[PASS] Linear function
+[PASS] Constant function
+[PASS] Cube at x=2, h=0.1
+[PASS] NULL function pointer
+[PASS] x is NAN
+[PASS] x is negative infinity
+[PASS] h is zero
+[PASS] h is negative
+[PASS] h is NAN
+[PASS] h is infinity
+[PASS] h too small to change x
+[PASS] x - h overflows
+[PASS] Function returns NAN
+[PASS] Function returns infinity
+[PASS] Nearby function value invalid
+[PASS] Derivative calculation overflows
+
+--- Central Difference ---
+[PASS] Square at x=3, h=0.1
+[PASS] Square at x=0, h=0.1
+[PASS] Square at negative x
+[PASS] Linear function
+[PASS] Constant function
+[PASS] Cube at x=2, h=0.1
+[PASS] NULL function pointer
+[PASS] x is NAN
+[PASS] x is infinity
+[PASS] h is zero
+[PASS] h is negative
+[PASS] h is NAN
+[PASS] h is infinity
+[PASS] h too small to change x
+[PASS] x + h overflows
+[PASS] x - h overflows
+[PASS] Function returns NAN
+[PASS] Function returns infinity
+[PASS] Nearby function value invalid
+[PASS] Derivative calculation overflows
+
+====================================
+ TEST SUMMARY
+====================================
+Total tests: 58
+Passed:      58
+Failed:      0
+
+ALL TESTS PASSED!
+Bisection Error: Function pointer is NULL.
+Bisection Error: Left endpoint a must be finite.
+Bisection Error: Left endpoint a must be finite.
+Bisection Error: Right endpoint b must be finite.
+Bisection Error: Right endpoint b must be finite.
+Bisection Error: Tolerance must be finite and positive.
+Bisection Error: Tolerance must be finite and positive.
+Bisection Error: Tolerance must be finite and positive.
+Bisection Error: Tolerance must be finite and positive.
+Bisection Error: Left endpoint a must be less than b.
+Bisection Error: Left endpoint a must be less than b.
+Bisection Error: f(a) and f(b) have the same sign; root is not bracketed.
+Bisection Error: f(a) returned a non-finite value.
+Bisection Error: f(b) returned a non-finite value.
+Bisection Error: f(midpoint) returned a non-finite value at iteration 1.
+Newton-Raphson Error: Function pointer is NULL.
+Newton-Raphson Error: Derivative function pointer is NULL.
+Newton-Raphson Error: Initial guess must be finite.
+Newton-Raphson Error: Initial guess must be finite.
+Newton-Raphson Error: Tolerance must be finite and positive.
+Newton-Raphson Error: Tolerance must be finite and positive.
+Newton-Raphson Error: Tolerance must be finite and positive.
+Newton-Raphson Error: Tolerance must be finite and positive.
+Newton-Raphson Error: Function returned a non-finite value at iteration 1.
+Newton-Raphson Error: Function returned a non-finite value at iteration 1.
+Newton-Raphson Error: Derivative returned a non-finite value at iteration 1.
+Newton-Raphson Error: Derivative returned a non-finite value at iteration 1.
+Newton-Raphson Error: Derivative is zero at iteration 1; division by zero avoided.
+Newton-Raphson Error: Next approximation became non-finite at iteration 1.
+Secant Error: Function pointer is NULL.
+Secant Error: First initial guess x0 must be finite.
+Secant Error: First initial guess x0 must be finite.
+Secant Error: Second initial guess x1 must be finite.
+Secant Error: Second initial guess x1 must be finite.
+Secant Error: Tolerance must be finite and positive.
+Secant Error: Tolerance must be finite and positive.
+Secant Error: Tolerance must be finite and positive.
+Secant Error: Tolerance must be finite and positive.
+Secant Error: Initial guesses x0 and x1 must be different.
+Secant Error: f(x0) returned a non-finite value.
+Secant Error: f(x1) returned a non-finite value.
+Secant Error: Function values are equal at iteration 1; division by zero avoided.
+====================================
+ ROOT FINDING MODULE TESTS
+====================================
+
+--- Bisection Method ---
+[PASS] Root of x^2 - 2
+[PASS] Left endpoint is root
+[PASS] Right endpoint is root
+[PASS] Linear function root
+[PASS] NULL function pointer
+[PASS] Left endpoint is NAN
+[PASS] Left endpoint is infinity
+[PASS] Right endpoint is NAN
+[PASS] Right endpoint is infinity
+[PASS] Tolerance is zero
+[PASS] Tolerance is negative
+[PASS] Tolerance is NAN
+[PASS] Tolerance is infinity
+[PASS] a greater than b
+[PASS] a equal to b
+[PASS] Interval does not bracket a root
+[PASS] f(a) returns NAN
+[PASS] f(b) returns infinity
+[PASS] f(midpoint) returns NAN
+
+--- Newton-Raphson Method ---
+[PASS] Root of x^2 - 2
+[PASS] Exact root
+[PASS] Linear function from another guess
+[PASS] NULL function pointer
+[PASS] NULL derivative pointer
+[PASS] Initial guess is NAN
+[PASS] Initial guess is infinity
+[PASS] Tolerance is zero
+[PASS] Tolerance is negative
+[PASS] Tolerance is NAN
+[PASS] Tolerance is infinity
+[PASS] Function returns NAN
+[PASS] Function returns infinity
+[PASS] Derivative returns NAN
+[PASS] Derivative returns infinity
+[PASS] Derivative is zero
+[PASS] Next approximation overflows
+
+--- Secant Method ---
+[PASS] Root of x^2 - 2
+[PASS] First guess is exact root
+[PASS] Second guess is exact root
+[PASS] Linear function from two guesses
+[PASS] NULL function pointer
+[PASS] First guess is NAN
+[PASS] First guess is infinity
+[PASS] Second guess is NAN
+[PASS] Second guess is infinity
+[PASS] Tolerance is zero
+[PASS] Tolerance is negative
+[PASS] Tolerance is NAN
+[PASS] Tolerance is infinity
+[PASS] Equal initial guesses
+[PASS] f(x0) returns NAN
+[PASS] f(x1) returns infinity
+[PASS] Equal function values
+
+====================================
+ TEST SUMMARY
+====================================
+Total tests: 53
+Passed:      53
+Failed:      0
+
+ALL TESTS PASSED!
+Phase 13 sensitivity analysis OK
+Phase 6 portfolio solver OK
+Phase 9 accuracy study OK
+Phase 14 execution limits OK
+Phase 4 method recommendation OK
+Phase 7 error detection OK
+Phase 8 comparison engine OK
+Phase 16 validation suite OK
+Phase 5 fallback OK
+[PASS] x^2 - 4 at x=3
+[PASS] sin(x)+cos(x) at x=0
+[PASS] log(1)
+[PASS] sqrt(9)
+[PASS] unary and right-associative power precedence
+[PASS] scientific numeric literals
+[PASS] expression-backed bisection
+[PASS] expression-backed central difference
+Phase 2 expression engine OK
+Advanced numerical algorithms OK (linear algebra, integration, optimization, RK4)
+====================================
+ NUMERICAL INTERPOLATION TESTS
+====================================
+
+--- Linear Interpolation ---
+[PASS] Midpoint
+[PASS] Left endpoint
+[PASS] Right endpoint
+[PASS] Extrapolation to the right
+[PASS] Extrapolation to the left
+[PASS] Negative coordinates
+[PASS] Constant function
+[PASS] Reversed x coordinates
+[PASS] Duplicate x coordinates
+[PASS] x0 is NAN
+[PASS] y0 is infinity
+[PASS] x1 is infinity
+[PASS] y1 is NAN
+[PASS] Query x is NAN
+[PASS] Query x is infinity
+[PASS] Denominator overflows
+[PASS] Result becomes non-finite
+
+--- Lagrange Interpolation ---
+[PASS] Quadratic at x=1.5
+[PASS] Known point x=0
+[PASS] Known point x=1
+[PASS] Known point x=2
+[PASS] Extrapolation at x=3
+[PASS] Negative query x=-1
+[PASS] Single data point
+[PASS] Cubic polynomial
+[PASS] Duplicate x coordinates
+[PASS] NULL x array
+[PASS] NULL y array
+[PASS] Zero data points
+[PASS] Query x is NAN
+[PASS] Query x is infinity
+[PASS] Array contains NAN x
+[PASS] Array contains infinite y
+
+--- Newton Interpolation ---
+[PASS] Quadratic at x=1.5
+[PASS] Known point x=0
+[PASS] Known point x=1
+[PASS] Known point x=2
+[PASS] Extrapolation at x=3
+[PASS] Negative query x=-1
+[PASS] Single data point
+[PASS] Cubic polynomial
+[PASS] Duplicate x coordinates
+[PASS] NULL x array
+[PASS] NULL y array
+[PASS] Zero data points
+[PASS] Query x is NAN
+[PASS] Query x is infinity
+[PASS] Array contains NAN x
+[PASS] Array contains infinite y
+
+====================================
+ TEST SUMMARY
+====================================
+Total tests: 49
+Passed:      49
+Failed:      0
+
+ALL TESTS PASSED!
+Linear Interpolation Error: x0 and x1 must be different.
+Linear Interpolation Error: x0 must be finite.
+Linear Interpolation Error: y0 must be finite.
+Linear Interpolation Error: x1 must be finite.
+Linear Interpolation Error: y1 must be finite.
+Linear Interpolation Error: x must be finite.
+Linear Interpolation Error: x must be finite.
+Linear Interpolation Error: x1 - x0 overflowed.
+Linear Interpolation Error: Calculated result is not finite.
+Lagrange Interpolation Error: Duplicate x values at indices 1 and 2.
+Lagrange Interpolation Error: x_values array is NULL.
+Lagrange Interpolation Error: y_values array is NULL.
+Lagrange Interpolation Error: Number of points must be greater than zero.
+Lagrange Interpolation Error: Interpolation point x must be finite.
+Lagrange Interpolation Error: Interpolation point x must be finite.
+Lagrange Interpolation Error: x_values[1] is not finite.
+Lagrange Interpolation Error: y_values[1] is not finite.
+Newton Interpolation Error: Duplicate x values at indices 2 and 1.
+Newton Interpolation Error: x_values array is NULL.
+Newton Interpolation Error: y_values array is NULL.
+Newton Interpolation Error: Number of points must be greater than zero.
+Newton Interpolation Error: Interpolation point x must be finite.
+Newton Interpolation Error: Interpolation point x must be finite.
+Newton Interpolation Error: x_values[1] is not finite.
+Newton Interpolation Error: y_values[1] is not finite.
+[PASS] Lagrange: 256 points, zero dataset (expected=0, actual=0)
+[PASS] Newton: 256 points, zero dataset (expected=0, actual=0)
+[PASS] Lagrange: 256 points, known node (expected=3, actual=3)
+[PASS] Newton: 256 points, known node (expected=3, actual=3)
+[PASS] Caller retains ownership; input arrays unchanged
+[PASS] Newton: 500 repeated calls
+[PASS] Newton: allocation-size multiplication overflow (actual=nan)
+[PASS] Newton: duplicate nodes in allocated input array (actual=nan)
+
+ROBUSTNESS SUMMARY: 8 passed, 0 failed, 8 total
+Newton Interpolation Error: Requested array size is too large.
+Newton Interpolation Error: Duplicate x values at indices 1 and 0.
+Newton Interpolation Error: Memory allocation failed.
+====================================
+ ALLOCATION FAILURE INJECTION TESTS
+====================================
+[PASS] Forced malloc failure returns NAN
+[PASS] Successful retry after allocation failure
+ALLOCATION TEST SUMMARY: 2 passed, 0 failed, 2 total

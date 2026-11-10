@@ -1,177 +1,110 @@
-# Numerical Recipes Library (C11)
+# NUMERIX
 
-A modular C11 library implementing common numerical methods for root finding, numerical differentiation, and interpolation. The project separates reusable library code from demonstration programs and automated tests.
+NUMERIX is a C11 numerical library in active development. The repository keeps its original `numerical_recipes.h` API while adding a structured API in `include/numerix.h`.
 
-## Features
+## What works today
 
-- **Root finding:** bisection, Newton–Raphson, and secant methods.
-- **Numerical differentiation:** forward, backward, and central finite differences.
-- **Interpolation:** linear interpolation/extrapolation, Lagrange polynomial interpolation, and Newton divided-difference interpolation.
-- **Reusable static library:** `lib/libnumerical_recipes.a`.
-- **Validation and diagnostics:** invalid inputs and detected numerical failures are reported to `stderr`; numerical functions return `NAN` on detected failure.
-- **Testing:** normal, boundary, invalid-input, robustness, repeated-call, and controlled allocation-failure tests.
-- **Separate examples:** each demo is a separate executable; the library itself does not contain a `main()` function.
+- Root finding: bisection, Newton-Raphson, and secant methods.
+- Numerical differentiation: forward, backward, and central finite differences.
+- Interpolation: linear, Lagrange, and Newton divided-difference interpolation.
+- Dense linear algebra: vector dot product and norm, matrix-vector multiplication, Gaussian elimination with partial pivoting, and pivoted LU factorization.
+- Numerical integration: composite trapezoid and composite Simpson rules.
+- Scalar optimization: golden-section minimization on a finite interval.
+- Initial value ODE solving: fixed-step fourth-order Runge-Kutta (RK4).
+- Callback and expression-backed scalar functions, with basic piecewise evaluation.
+- Early-stage recommendation, fallback, comparison, diagnostics, and execution helper APIs.
+- Three legacy API demonstrations and a NUMERIX command-line interface.
 
-## Requirements
+The expression engine supports arithmetic, powers, and a limited set of scalar functions. The structured recommendation, comparison, diagnostics, and piecewise layers have basic implementations and smoke tests; they are not yet a complete intelligent execution system. The CLI executes the implemented scalar algorithms and sample linear/ODE operations; it reports unsupported step tracing. The portfolio runs sequentially, and external-library comparison does not invoke GSL, BLAS, or LAPACK. New dense linear algebra and ODE routines need broader scale and stability testing beyond their analytical unit cases.
 
-The project has been built on Windows with **MinGW GCC 6.3.0** and `mingw32-make`. A C11-compatible compiler, GNU Make-compatible build tool, and standard C math library are required. The sanitizer checks described in the testing documentation were run in a Linux environment; sanitizer availability on Windows depends on the compiler/toolchain.
+See [the repository audit](documentation/architecture/final_repository_audit.md) for evidence and module-by-module limitations.
 
-## Build and test on Windows
+## Build
 
-Run these commands from the project root in `cmd.exe`:
+Requirements: a C11 compiler and GNU Make. The build has been exercised with the MinGW GCC toolchain available in this workspace. CMake support is provided but still needs verification in an environment with CMake installed.
 
-```bat
-mingw32-make clean
+Windows with MinGW:
+
+```sh
 mingw32-make all
 mingw32-make test
 mingw32-make test-memory
 ```
 
-Targets:
+Linux with GCC or Clang and GNU Make:
 
-| Command | Purpose |
-|---|---|
-| `mingw32-make all` | Build the static library, demos, and regular test executables |
-| `mingw32-make library` | Build the static library |
-| `mingw32-make test` | Run root-finding, differentiation, interpolation, and robustness suites |
-| `mingw32-make test-memory` | Run controlled allocation-failure tests for Newton interpolation |
-| `mingw32-make clean` | Remove generated build products |
-
-The test commands are separate: `test` runs **168 checks** and `test-memory` runs **2 additional checks**. The recorded Windows run passed all 170 checks.
-
-To verify the allocation-failure evidence saved by the project, run:
-
-```bat
-type documentation\evidence\allocation_failure_windows.txt
+```sh
+make all
+make test
+make test-memory
 ```
 
-## Run the demos
+The primary archive is `lib/libnumerix.a`; executables are written under `bin/`. `make test` runs the legacy tests, NUMERIX phase tests, and allocation-failure test. `make clean` removes generated build, binary, and library outputs.
 
-After `mingw32-make all`, run the relevant executable from the project root:
+CMake workflow:
 
-```bat
-bin\demo_root_finding.exe
-bin\demo_differentiation.exe
-bin\demo_interpolation.exe
+```sh
+cmake -S . -B build-cmake
+cmake --build build-cmake
+ctest --test-dir build-cmake --output-on-failure
 ```
 
-The demos illustrate numerical results and expected error handling. The temperature values in the interpolation demo are illustrative examples, not measured weather data.
+## Command-line use
 
-## Use the library in your own program
+```sh
+bin/numerix_cli --help
+bin/numerix_cli root --expr "x^2 - 2" --a 1 --b 2 --tol 1e-10
+bin/numerix_cli differentiate --expr "x^3" --x 2
+bin/numerix_cli integrate --expr "x^2" --a 0 --b 1
+bin/numerix_cli minimize --expr "(x-1)^2" --a 0 --b 2
+```
 
-Include the public header:
+The CLI also accepts `linear`, `ode`, `piecewise`, `interpolate`, `recommend`, `portfolio`, `compare`, `accuracy`, and `sensitivity`. Step tracing is not yet connected to solver loops.
+
+## Use the NUMERIX API
 
 ```c
-#include <stdio.h>
 #include <math.h>
-#include "numerical_recipes.h"
+#include "numerix.h"
 
-static double f(double x)
+static double f(double x, void *context)
 {
+    (void)context;
     return x * x - 2.0;
-}
-
-static double df(double x)
-{
-    return 2.0 * x;
 }
 
 int main(void)
 {
-    double root = newton_raphson(f, df, 1.0, 1e-8);
-
-    if (!isfinite(root)) {
-        fprintf(stderr, "Root-finding failed.\n");
+    NUMERIX_Function function;
+    if (numerix_function_init(&function, f, NULL, NULL) != NUMERIX_STATUS_OK)
         return 1;
-    }
 
-    printf("Approximate root: %.10f\n", root);
-    return 0;
+    double root = numerix_bisection(&function, 0.0, 2.0, 1e-8);
+    return isfinite(root) ? 0 : 1;
 }
 ```
 
-For a direct manual build with MinGW, assuming the library archive has already been built:
+Compile and link with GCC:
 
-```bat
-gcc -std=c11 -Wall -Wextra -Iinclude example.c -Llib -lnumerical_recipes -lm -o example.exe
+```sh
+gcc -std=c11 -Iinclude example.c lib/libnumerix.a -lm -o example
 ```
 
-Linking uses `-lnumerical_recipes` to select `libnumerical_recipes.a`, and `-lm` for math functions. If your build environment uses different paths or library naming conventions, adjust the command accordingly.
+Numerical routines returning `double` use `NAN` for detected invalid input or failure. Check results with `isfinite()`. A finite approximation alone does not certify an error bound. Callback context remains caller-owned. Expression functions own their parsed expression data and should be released with `numerix_function_destroy()`.
 
-## Project layout
+## Legacy API
 
-```text
-numerical-recipes/
-├── include/
-│   └── numerical_recipes.h
-├── src/
-│   ├── root_finding.c
-│   ├── differentiation.c
-│   └── interpolation.c
-├── examples/
-│   ├── demo_root_finding.c
-│   ├── demo_differentiation.c
-│   └── demo_interpolation.c
-├── tests/
-│   ├── test_root_finding.c
-│   ├── test_differentiation.c
-│   ├── test_interpolation.c
-│   ├── test_robustness.c
-│   └── test_allocation_failure.c
-├── documentation/
-│   ├── architecture.md
-│   ├── algorithms.md
-│   ├── api_reference.md
-│   ├── memory_management.md
-│   ├── testing.md
-│   ├── references.md
-│   ├── team_contributions.md
-│   └── evidence/
-├── Makefile
-└── README.md
-```
+`include/numerical_recipes.h` and the three original demos remain supported during migration. They provide the same root finding, differentiation, and interpolation methods using scalar callbacks and `NAN` failure returns.
 
-Generated output directories include `build/`, `bin/`, and `lib/`. The exact files present in those directories depend on whether the project has been built.
+## Repository map
 
-## API and numerical behavior
+- `include/` — public NUMERIX and legacy headers.
+- `src/` — legacy algorithms and NUMERIX modules.
+- `platform/` — Windows and Linux timing implementations.
+- `tests/` — legacy robustness/correctness tests and NUMERIX phase tests.
+- `examples/` — legacy API demonstrations.
+- `documentation/` — API, algorithm, test, and architecture notes.
 
-The public declarations and per-function contracts are documented in [`include/numerical_recipes.h`](include/numerical_recipes.h). See [`documentation/api_reference.md`](documentation/api_reference.md) for a method summary, [`documentation/algorithms.md`](documentation/algorithms.md) for formulas and limitations, and [`documentation/memory_management.md`](documentation/memory_management.md) for ownership and allocation behavior.
+## Verification record
 
-General rules:
-
-- Callbacks must be valid functions with the declared `double`-argument signature.
-- Input values and array elements must satisfy the preconditions documented in the header.
-- Detected invalid inputs, non-finite intermediate values, convergence failures, and allocation failures are reported with a diagnostic and return `NAN`.
-- A finite return value is an approximation; it does not automatically prove that the mathematical error is below the supplied tolerance.
-- The library does not guarantee convergence for all functions or starting values.
-
-## Current test record
-
-Recorded Windows build environment: MinGW GCC 6.3.0, `mingw32-make`.
-
-| Suite | Checks passed | Checks failed |
-|---|---:|---:|
-| Root finding | 53 | 0 |
-| Differentiation | 58 | 0 |
-| Interpolation | 49 | 0 |
-| Robustness | 8 | 0 |
-| **`mingw32-make test` total** | **168** | **0** |
-| Allocation-failure injection (`test-memory`) | 2 | 0 |
-| **Combined recorded total** | **170** | **0** |
-
-Linux AddressSanitizer/UndefinedBehaviorSanitizer runs were also reported as passing without sanitizer diagnostics. See `documentation/testing.md`; retain only evidence files that were actually generated and checked in your working copy.
-
-## Documentation index
-
-- [Architecture](documentation/architecture.md)
-- [Algorithms and limitations](documentation/algorithms.md)
-- [API reference](documentation/api_reference.md)
-- [Memory management](documentation/memory_management.md)
-- [Testing strategy and results](documentation/testing.md)
-- [References and attribution](documentation/references.md)
-- [Team contributions](documentation/team_contributions.md)
-- [Faculty submission checklist](documentation/submission_checklist.md)
-
-## Attribution and academic integrity
-
-The numerical techniques in this project are standard numerical-analysis methods. List any textbooks, tutorials, documentation, or source code that materially informed the implementation in `documentation/references.md`, and follow your course's rules for external assistance and AI-tool disclosure. Do not claim a contribution or source attribution that you cannot verify.
+The available MinGW GCC run passed 168 legacy correctness/robustness checks, two allocation-failure checks, the advanced-algorithm analytical suite, and all 18 phase test executables. The phase executables include smoke tests and are not a substitute for full numerical coverage. CMake/CTest, Linux builds, sanitizers, large-matrix conditioning, and a real parallel portfolio have not yet been verified. See the audit for detail.

@@ -4,7 +4,7 @@ This document summarizes the mathematical methods exposed by the library. The fo
 
 ## 1. Root finding
 
-Each root-finding method seeks an approximate solution of \(f(x)=0\). The implementations attempt at most 1,000 iterations.
+Each root-finding method seeks an approximate solution of \(f(x)=0\). The legacy routines attempt at most 1,000 iterations. NUMERIX scalar wrappers use a separate 2,048-iteration cap.
 
 ### Bisection
 
@@ -123,3 +123,21 @@ High-degree global polynomial interpolation can be poorly conditioned, especiall
 ## 4. Floating-point and failure behavior
 
 All calculations use C `double`. Finite precision means mathematical identities need not hold exactly in computation. Detected invalid input, non-finite arithmetic, convergence failure, or allocation failure produces a diagnostic and `NAN`, as documented by the public header. Callers should inspect the returned value and independently validate residuals or errors when application accuracy matters.
+
+## 5. Additional NUMERIX algorithms
+
+### Dense linear algebra
+
+Vector dot products and matrix-vector products use row-major storage. The Euclidean norm uses a scaled sum-of-squares calculation to avoid avoidable overflow/underflow. Gaussian elimination and LU factorization use partial pivoting. Exact zero pivots are reported as singular; the current routines do not estimate condition numbers or classify near-singular matrices. Work arrays are temporary, and Gaussian elimination writes the solution buffer only after a successful solve.
+
+### Composite integration
+
+The trapezoid rule uses endpoint half-weights and interior unit weights. Simpson integration uses the standard `1,4,2,...,4,1` weights and requires an even number of panels. Both use compensated accumulation, support reversed bounds, and reject non-finite function values. They do not estimate truncation error, adapt panel counts, or detect discontinuities. More than ten million panels are rejected.
+
+### Golden-section minimization
+
+The optimizer repeatedly contracts a finite interval using the golden ratio and returns the estimated minimizer location. It assumes the objective is unimodal over the interval. It reports non-convergence as `NAN` if the requested interval width is not reached within the iteration limit. It does not prove global optimality or return the objective value.
+
+### Classical fixed-step RK4
+
+The ODE routine applies the classical four-stage Runge-Kutta method to a scalar initial value problem. It supports forward or backward time and shortens the last step to end at the requested time. The caller supplies a maximum step count. The solver has no adaptive error estimate; accuracy depends on the caller's step size and the problem's smoothness.

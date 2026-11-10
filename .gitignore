@@ -1,5 +1,10 @@
 /build/
+/build-cmake/
+/build-cmake-audit/
 /bin/
 *.o
 *.exe
 lib/*.a
+CMakeFiles/
+CMakeCache.txt
+Testing/

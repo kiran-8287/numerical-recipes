@@ -1,103 +1,106 @@
-# ============================================================
-# Numerical Recipes Library - GNU Make build
-# Primary environment: Windows + MinGW GCC 6.3.0
-# Also supports GNU Make + GCC on Linux for reproducibility.
-# ============================================================
+# NUMERIX C11 build. Works with GNU Make, GCC or Clang, and MinGW GCC.
 
-CC       := gcc
-AR       := ar
-ARFLAGS  := rcs
-CFLAGS   := -std=c11 -O2 -Wall -Wextra -Iinclude
-LDLIBS   := -lm
+CC = gcc
+AR = ar
+ARFLAGS = rcs
+CPPFLAGS ?= -Iinclude
+CPPFLAGS += -Iplatform
+CFLAGS ?= -std=c11 -O2 -Wall -Wextra -Wpedantic
+LDLIBS ?= -lm
 
-SRC_DIR      := src
-EXAMPLES_DIR := examples
-TESTS_DIR    := tests
-BUILD_DIR    := build
-BIN_DIR      := bin
-LIB_DIR      := lib
-HEADER       := include/numerical_recipes.h
-STATIC_LIB   := $(LIB_DIR)/libnumerical_recipes.a
-
-# Windows Command Prompt and POSIX shells need different directory commands.
 ifeq ($(OS),Windows_NT)
 EXE := .exe
-MKDIR = if not exist "$(subst /,\,$(1))" mkdir "$(subst /,\,$(1))"
-REMOVE_DIR = if exist "$(subst /,\,$(1))" rmdir /s /q "$(subst /,\,$(1))"
+PLATFORM_SOURCE := platform/windows/timing.c
+define MAKE_DIR
+if not exist "$(subst /,\\,$(1))" mkdir "$(subst /,\\,$(1))"
+endef
+define RUN_TESTS
+for %%t in ($(subst /,\\,$(TEST_BINS))) do @%%t || exit /b 1
+endef
+define RUN_ONE
+$(subst /,\\,$(1))
+endef
 else
 EXE :=
-MKDIR = mkdir -p "$(1)"
-REMOVE_DIR = rm -rf "$(1)"
+PLATFORM_SOURCE := platform/linux/timing.c
+define MAKE_DIR
+mkdir -p "$(1)"
+endef
+define RUN_TESTS
+set -e; for test in $(TEST_BINS); do "./$$test"; done
+endef
+define RUN_ONE
+./$(1)
+endef
 endif
 
-LIB_OBJS := \
-    $(BUILD_DIR)/root_finding.o \
-    $(BUILD_DIR)/differentiation.o \
-    $(BUILD_DIR)/interpolation.o
+BUILD_DIR := build
+BIN_DIR := bin
+LIB_DIR := lib
+STATIC_LIB := $(LIB_DIR)/libnumerix.a
+ALLOCATION_TEST_BIN := $(BIN_DIR)/test_allocation_failure$(EXE)
 
-DEMO_ROOT   := $(BIN_DIR)/demo_root_finding$(EXE)
-DEMO_DIFF   := $(BIN_DIR)/demo_differentiation$(EXE)
-DEMO_INTERP := $(BIN_DIR)/demo_interpolation$(EXE)
-DEMO_TARGETS := $(DEMO_ROOT) $(DEMO_DIFF) $(DEMO_INTERP)
+LIB_SOURCES := $(wildcard src/*.c src/algorithms/*.c src/core/*.c \
+	               src/diagnostics/*.c src/execution/*.c src/expression/*.c \
+	               src/intelligence/*.c src/piecewise/*.c src/benchmarking/*.c \
+	               src/testing/*.c) $(PLATFORM_SOURCE)
+LIB_SOURCES += src/cli/cli.c
+LIB_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(LIB_SOURCES))
+TEST_SOURCES := $(filter-out tests/test_allocation_failure.c,$(wildcard tests/test_*.c))
+TEST_BINS := $(patsubst tests/test_%.c,$(BIN_DIR)/test_%$(EXE),$(TEST_SOURCES))
+EXAMPLE_SOURCES := $(wildcard examples/demo_*.c)
+EXAMPLE_BINS := $(patsubst examples/%.c,$(BIN_DIR)/%$(EXE),$(EXAMPLE_SOURCES))
+CLI_BIN := $(BIN_DIR)/numerix_cli$(EXE)
 
-TEST_ROOT   := $(BIN_DIR)/test_root_finding$(EXE)
-TEST_DIFF   := $(BIN_DIR)/test_differentiation$(EXE)
-TEST_INTERP := $(BIN_DIR)/test_interpolation$(EXE)
-TEST_ROBUST := $(BIN_DIR)/test_robustness$(EXE)
-TEST_TARGETS := $(TEST_ROOT) $(TEST_DIFF) $(TEST_INTERP) $(TEST_ROBUST)
+.PHONY: all library demo cli test test-memory clean
 
-.PHONY: all library demo test test-memory clean
+all: library demo cli $(TEST_BINS)
 
-all: library $(DEMO_TARGETS) $(TEST_TARGETS)
 library: $(STATIC_LIB)
-demo: $(DEMO_TARGETS)
+demo: $(EXAMPLE_BINS)
+cli: $(CLI_BIN)
 
-test: $(TEST_TARGETS)
-	@echo Running Root Finding Tests
-	@$(TEST_ROOT)
-	@echo Running Differentiation Tests
-	@$(TEST_DIFF)
-	@echo Running Interpolation Tests
-	@$(TEST_INTERP)
-	@echo Running Robustness Tests
-	@$(TEST_ROBUST)
+$(STATIC_LIB): $(LIB_OBJECTS) | $(LIB_DIR)
+	$(AR) $(ARFLAGS) $@ $^
 
-# A real reusable static library, containing only the library modules.
-$(STATIC_LIB): $(LIB_OBJS) | $(LIB_DIR)
-	$(AR) $(ARFLAGS) $@ $(LIB_OBJS)
+$(BUILD_DIR)/%.o: %.c
+	@$(call MAKE_DIR,$(dir $@))
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(HEADER) | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BIN_DIR)/%$(EXE): examples/%.c $(STATIC_LIB) | $(BIN_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(STATIC_LIB) $(LDLIBS) -o $@
 
-$(BUILD_DIR)/demo_%.o: $(EXAMPLES_DIR)/demo_%.c $(HEADER) | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BIN_DIR)/test_%$(EXE): tests/test_%.c $(STATIC_LIB) | $(BIN_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(STATIC_LIB) $(LDLIBS) -o $@
 
-$(BUILD_DIR)/test_%.o: $(TESTS_DIR)/test_%.c $(HEADER) | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Link applications against the archive, not against src/*.o directly.
-# -lm MUST follow the archive so the math symbols can be resolved.
-$(BIN_DIR)/demo_%$(EXE): $(BUILD_DIR)/demo_%.o $(STATIC_LIB) | $(BIN_DIR)
-	$(CC) $< $(STATIC_LIB) $(LDLIBS) -o $@
-
-$(BIN_DIR)/test_%$(EXE): $(BUILD_DIR)/test_%.o $(STATIC_LIB) | $(BIN_DIR)
-	$(CC) $< $(STATIC_LIB) $(LDLIBS) -o $@
+$(CLI_BIN): src/cli/main.c $(STATIC_LIB) | $(BIN_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(STATIC_LIB) $(LDLIBS) -o $@
 
 $(BUILD_DIR) $(BIN_DIR) $(LIB_DIR):
-	@$(call MKDIR,$@)
+	@$(call MAKE_DIR,$@)
 
-clean:
-	@$(call REMOVE_DIR,$(BUILD_DIR))
-	@$(call REMOVE_DIR,$(BIN_DIR))
-	@$(call REMOVE_DIR,$(LIB_DIR))
+test: $(TEST_BINS) $(ALLOCATION_TEST_BIN)
+	@$(RUN_TESTS)
+	@$(call RUN_ONE,$(ALLOCATION_TEST_BIN))
 
-# Optional deterministic allocation-failure tests. The production library is
-# never changed: this target builds an isolated copy of interpolation.c.
-$(BUILD_DIR)/interpolation_allocfail.o: $(SRC_DIR)/interpolation.c $(HEADER) | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -Dmalloc=nr_test_malloc -c $< -o $@
+$(BUILD_DIR)/interpolation_allocfail.o: src/interpolation.c include/numerical_recipes.h | $(BUILD_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -Dmalloc=nr_test_malloc -c $< -o $@
 
-$(BIN_DIR)/test_allocation_failure$(EXE): $(TESTS_DIR)/test_allocation_failure.c $(BUILD_DIR)/interpolation_allocfail.o $(HEADER) | $(BIN_DIR)
-	$(CC) $(CFLAGS) $(TESTS_DIR)/test_allocation_failure.c $(BUILD_DIR)/interpolation_allocfail.o $(LDLIBS) -o $@
+$(ALLOCATION_TEST_BIN): tests/test_allocation_failure.c $(BUILD_DIR)/interpolation_allocfail.o | $(BIN_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ $(LDLIBS) -o $@
 
 test-memory: $(BIN_DIR)/test_allocation_failure$(EXE)
-	@$(BIN_DIR)/test_allocation_failure$(EXE)
+	@$(call RUN_ONE,$(ALLOCATION_TEST_BIN))
+
+ifeq ($(OS),Windows_NT)
+clean:
+	@if exist "$(BUILD_DIR)" rmdir /s /q "$(BUILD_DIR)"
+	@if exist "$(BIN_DIR)" rmdir /s /q "$(BIN_DIR)"
+	@if exist "$(LIB_DIR)\libnumerix.a" del /q "$(LIB_DIR)\libnumerix.a"
+	@if exist "$(LIB_DIR)\libnumerical_recipes.a" del /q "$(LIB_DIR)\libnumerical_recipes.a"
+else
+clean:
+	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	rm -f $(LIB_DIR)/libnumerix.a $(LIB_DIR)/libnumerical_recipes.a
+	rmdir $(LIB_DIR) 2>/dev/null || true
+endif

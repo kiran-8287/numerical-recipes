@@ -1,102 +1,41 @@
-# Architecture and Module Design
+# NUMERIX architecture
 
-## 1. Design goals
+## Public interfaces
 
-The project is organized as a small reusable C11 library rather than a single application. Its principal goals are to:
+`include/numerix.h` is the primary public C API. It defines callback/expression functions, problems, options, results, status values, and the implemented solver and analysis interfaces. `include/numerical_recipes.h` remains as a compatibility interface for the original scalar routines.
 
-1. expose a stable, documented public API;
-2. separate algorithm implementation from demonstrations and tests;
-3. build the reusable routines into a static library;
-4. validate inputs and report detected failures consistently; and
-5. make each module independently understandable and testable.
+The compatibility API and NUMERIX API are compiled into one static archive, `libnumerix.a`. The legacy algorithms are retained because the compatibility interface and some NUMERIX interpolation wrappers still depend on them.
 
-## 2. Layered structure
+## Source layout
 
 ```text
-User program / demonstration
-          |
-          v
-include/numerical_recipes.h   Public declarations and contracts
-          |
-          v
-lib/libnumerical_recipes.a    Compiled reusable library
-          |
-          +--> src/root_finding.c
-          +--> src/differentiation.c
-          +--> src/interpolation.c
-
-tests/*.c                     Separate test executables
-Makefile                      Build, test, and clean targets
-documentation/*.md            Design, API, algorithm, and test notes
+include/                 Public headers
+src/core/                Function, problem, option, result, and status helpers
+src/algorithms/          Root finding, differences, interpolation, algebra, integration, optimization, ODE
+src/expression/          Tokenizer, parser, AST, and evaluator
+src/piecewise/           Piecewise segment and breakpoint support
+src/intelligence/        Recommendation and fallback helpers
+src/execution/           Portfolio, step log, and resource-limit helpers
+src/diagnostics/         Error, sensitivity, condition, and convergence helpers
+src/benchmarking/        Comparison and reporting helpers
+src/cli/                 CLI dispatch and executable entry point
+src/testing/             Lightweight validation-suite helpers
+src/                     Legacy scalar algorithms
+platform/                Operating-system timing implementations
+tests/                   Legacy tests and NUMERIX phase tests
+examples/                Legacy API demonstrations
 ```
 
-The diagram is conceptual: source files are compiled into object files, which are archived into the static library. Applications link against that archive. Tests are separate executables and are not part of the production library.
+## Execution and ownership
 
-## 3. Module responsibilities
+The callback function context remains caller-owned. Parsed expressions allocate an AST; `numerix_function_destroy` releases it. Piecewise segments borrow their function objects and contexts. Destroy the piecewise container with `numerix_piecewise_destroy`, and keep any borrowed callbacks and their contexts alive for the duration of evaluation.
 
-### `include/numerical_recipes.h`
+The scalar NUMERIX root, difference, integration, and optimization routines evaluate callbacks directly. Root and scalar objective routines return `NAN` for detected invalid inputs, non-finite evaluations, or failure to converge. RK4 and linear algebra return status codes. These routines do not currently return a unified `NUMERIX_Result`, and problem options/limits are not consistently connected to solver loops.
 
-This is the public interface. It declares the nine numerical routines, documents arguments and preconditions, describes the `NAN` failure convention, and explains callback and memory ownership expectations. It includes `extern "C"` guards for consumers compiling the header from C++.
+## Build and test arrangement
 
-### `src/root_finding.c`
+GNU Make and CMake compile the legacy and NUMERIX modules into the `numerix` static library. The CLI and examples link against it. The test programs remain separate executables. `make test` runs every regular test and the isolated allocation-failure test; CTest discovers the same test sources when built with CMake.
 
-Contains scalar root-finding implementations:
+## Current boundaries
 
-- `bisection`
-- `newton_raphson`
-- `secant`
-
-These functions accept callbacks representing a scalar function and, for Newton–Raphson, its derivative. The module validates inputs and detects common numerical breakdowns.
-
-### `src/differentiation.c`
-
-Contains finite-difference estimates of a first derivative:
-
-- `forward_difference`
-- `backward_difference`
-- `central_difference`
-
-The caller supplies the function callback, evaluation point, and positive step size.
-
-### `src/interpolation.c`
-
-Contains interpolation based on known points:
-
-- `linear_interpolation`
-- `lagrange_interpolation`
-- `newton_interpolation`
-
-The linear routine takes two explicit points. The polynomial routines take coordinate arrays and a point count. Newton interpolation uses a temporary dynamic array for divided differences; Lagrange interpolation does not require dynamic allocation in this implementation.
-
-## 4. Build outputs and separation
-
-The `Makefile` coordinates compilation and linking. The static archive is `lib/libnumerical_recipes.a`; generated object files and executables are placed in build/output directories. Demonstrations and tests have their own `main()` functions, while the library source files do not.
-
-This structure prevents demonstration code from being required by a consumer of the library and permits individual tests to be run separately.
-
-## 5. Error-handling policy
-
-The public functions preserve their declared return types. For detected invalid input or numerical failure, a function prints a diagnostic to `stderr` and returns `NAN`. Callers should check results with `isfinite()` or `isnan()` from `<math.h>`.
-
-This policy communicates many failure conditions without changing the API to return a separate status code. It also means callers should not treat every finite value as proof of convergence or high accuracy.
-
-## 6. Data representation, memory, and ownership
-
-The current API uses scalar `double` values, function pointers, and parallel `x_values[]` / `y_values[]` arrays for polynomial interpolation. It does not define a custom public `struct` or container type. The caller supplies the point count explicitly through `size_t n`.
-
-Input arrays and callback functions remain under caller control. The library does not retain them after a call, and interpolation routines do not modify the caller's arrays. Newton interpolation allocates temporary storage internally and releases it before returning after allocation. If allocation fails, it reports the failure and returns `NAN`.
-
-See [Data Structures and Data Representation](data_structures.md) for the data contracts, and [Memory Management](memory_management.md) for allocation-failure testing and ownership details.
-
-## 7. Extension points
-
-Future additions should follow the current structure:
-
-1. add a documented declaration to the public header;
-2. implement the routine in an appropriate module;
-3. add normal, boundary, invalid-input, and failure tests;
-4. add or update a separate demonstration if useful;
-5. update algorithm/API documentation; and
-6. verify clean build and all test targets before committing.
-
-New global mutable state should be avoided unless its lifecycle and thread-safety implications are documented.
+The first dense linear algebra, composite integration, golden-section, and scalar RK4 routines are callable and have analytical unit cases, but they have not had scale, conditioning, sanitizer, or cross-platform validation. The portfolio is sequential. Comparison reports measure elapsed time and function calls, but do not instrument iterations. Limits and cancellation are not consistently enforced by solver loops. External library adapters and a standalone benchmark runner remain unavailable. Track verified functionality in [the final repository audit](architecture/final_repository_audit.md).
