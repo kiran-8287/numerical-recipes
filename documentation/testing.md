@@ -59,7 +59,7 @@ cmake --build build-cmake --parallel
 ctest --test-dir build-cmake --output-on-failure
 ```
 
-CMake was installed into the user Python environment for validation. The MinGW Makefiles CMake generator configured and built successfully on Windows, and CTest passed all 24 registered tests. The Linux GCC/Clang and Windows MSVC hosted jobs failed during CMake build in run 42924291210. Local reproduction identified the missing `include/` path on the allocation-failure test target; that has been fixed and the CMake/CTest suite passes locally. Hosted jobs need a rerun to confirm the fix across those toolchains.
+CMake was installed into the user Python environment for validation. The MinGW Makefiles CMake generator configured and built successfully on Windows, and CTest passed all 24 registered tests. Run 42924291210 failed because the allocation-failure target lacked the `include/` path; that was fixed. Run 42999988120 then failed because `.gitignore`'s unanchored `Testing/` pattern excluded `src/testing/validation.c`, leaving phase 16 unresolved at link time. The rule is now root-anchored, and a clean snapshot with the validation source included builds and passes all 24 CTest tests locally. The source is currently untracked and must be committed with the ignore-rule fix before hosted Linux/MSVC jobs can verify it.
 
 ## Sanitizers
 
