@@ -59,6 +59,8 @@ if(BUILD_TESTING)
                 malloc=nr_test_malloc)
             add_executable(${test_name} "${test_source}"
                 $<TARGET_OBJECTS:numerix_allocfail_interpolation>)
+            target_include_directories(${test_name} PRIVATE
+                "${CMAKE_CURRENT_SOURCE_DIR}/include")
             if(NOT MSVC)
                 target_link_libraries(${test_name} PRIVATE m)
             endif()

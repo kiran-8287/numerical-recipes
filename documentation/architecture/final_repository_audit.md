@@ -8,7 +8,7 @@ Audit date: 2026-11-11. The working tree already contained a broad, uncommitted 
 - `mingw32-make test` passed 53 root-finding, 58 differentiation, 49 interpolation, 8 robustness, and 2 allocation-failure checks (170 counted checks), and ran all 18 NUMERIX phase executables successfully. Expression checks include power precedence/associativity, signed exponents, scientific notation, and rejection of malformed numeric literals.
 - CLI smoke runs verified `--help`, `--version`, an expression-backed bisection root, expression-backed differentiation, and a clear error for an unknown command.
 - These tests are mostly focused demonstrations and smoke checks. They do not establish full numerical correctness, memory safety, concurrency safety, or feature completeness.
-- CMake and CTest could not be run because `cmake` is not installed in the environment. No Linux toolchain is available in this workspace, so Linux portability remains unverified.
+- CMake initially failed because the allocation-failure test target did not include `include/`; after fixing that target, CMake configured, built, and ran all 24 CTest entries successfully with MinGW GCC on Windows. Hosted Linux GCC/Clang and MSVC jobs from run 42924291210 failed during CMake build; hosted job logs require repository admin rights here, and those toolchains remain unverified locally.
 
 ## Feature audit
 
@@ -34,7 +34,7 @@ Audit date: 2026-11-11. The working tree already contained a broad, uncommitted 
 | CLI | PARTIALLY IMPLEMENTED | Interactive menu and command-line root, linear solve, interpolation, integration, differentiation, golden-section minimization, RK4 sample, piecewise evaluation, recommendation, sequential portfolio, comparison, accuracy, and sensitivity operations work. `--help` and `--version` work. Step traces are not connected to solver loops. |
 | Benchmarking | PARTIALLY IMPLEMENTED | Root comparison now measures elapsed time and callback/expression evaluation counts; iteration counts are explicitly unavailable. Accuracy is measured only when a reference solution is supplied, otherwise residual is reported separately. GSL/BLAS/LAPACK and a separate legacy baseline remain unavailable; no standalone benchmark runner exists. |
 | Build: Make | VERIFIED | The updated Makefile builds `lib/libnumerix.a`, CLI, demos, and tests; `make test` runs legacy, phase, and allocation-failure tests. Verified with MinGW GCC on Windows. |
-| Build: CMake | PARTIALLY IMPLEMENTED | CMake now defines the `numerix` static target, CLI, demos, and CTest entries. CMake/CTest remain unverified because `cmake` is unavailable here. |
+| Build: CMake | VERIFIED | CMake defines the `numerix` static target, CLI, demos, and CTest entries. A MinGW GCC CMake build and all 24 CTest entries passed locally after adding the missing include path for the allocation-failure target. Linux GCC/Clang and MSVC hosted builds still need rerunning after the fix. |
 | Portability/CI | PARTIALLY IMPLEMENTED | MinGW GCC build/test passed. Linux and MSVC builds were not run. A GitHub Actions workflow now configures GCC/Clang Linux and MSVC Windows jobs, but has not run in this workspace. |
 | Documentation | PARTIALLY IMPLEMENTED | README now describes the supported subset and the major gaps; the audit records module evidence. API and algorithm references still need a full contract and accuracy review. |
 | Repository cleanup | NEEDS REFACTORING | Legacy source/header remain required by the adapters and tests. Build artifacts are ignored; no source archive or generated-binary review has been completed. |
@@ -51,7 +51,7 @@ Audit date: 2026-11-11. The working tree already contained a broad, uncommitted 
 
 ## Immediate priorities
 
-1. Install/use CMake and verify CMake/CTest on this checkout; run Linux and MSVC CI.
+1. Rerun Linux GCC/Clang and Windows MSVC CI after the CMake include-path fix.
 2. Add stress, scale, conditioning, and failure-injection tests for new linear algebra, integration, optimization, and ODE implementations.
 3. Replace placeholder metrics in comparison, accuracy, timing, and reliability reports with measurements from actual solver executions.
 4. Wire resource limits, cancellation, piecewise solving, and step traces into algorithm execution.

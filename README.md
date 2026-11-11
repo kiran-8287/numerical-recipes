@@ -21,7 +21,7 @@ See [the repository audit](documentation/architecture/final_repository_audit.md)
 
 ## Build
 
-Requirements: a C11 compiler and GNU Make. The build has been exercised with the MinGW GCC toolchain available in this workspace. CMake support is provided but still needs verification in an environment with CMake installed.
+Requirements: a C11 compiler and GNU Make. The Make build has been exercised with MinGW GCC. CMake and CTest have also been verified with the MinGW Makefiles generator on Windows; hosted Linux and MSVC jobs remain to be rerun after a CMake include-path fix.
 
 Windows with MinGW:
 
@@ -107,4 +107,4 @@ Numerical routines returning `double` use `NAN` for detected invalid input or fa
 
 ## Verification record
 
-The available MinGW GCC run passed 168 legacy correctness/robustness checks, two allocation-failure checks, the advanced-algorithm analytical suite, and all 18 phase test executables. The phase executables include smoke tests and are not a substitute for full numerical coverage. CMake/CTest, Linux builds, sanitizers, large-matrix conditioning, and a real parallel portfolio have not yet been verified. See the audit for detail.
+The available MinGW GCC run passed 168 legacy correctness/robustness checks, two allocation-failure checks, the advanced-algorithm analytical suite, and all 18 phase test executables. The CMake/CTest build passed all 24 registered tests with MinGW GCC. The phase executables include smoke tests and are not a substitute for full numerical coverage. Linux builds, MSVC, sanitizers, large-matrix conditioning, and a real parallel portfolio have not yet been verified. See the audit for detail.

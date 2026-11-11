@@ -59,7 +59,7 @@ cmake --build build-cmake --parallel
 ctest --test-dir build-cmake --output-on-failure
 ```
 
-CMake/CTest could not be executed in the current workspace because CMake is not installed. Linux and MSVC builds have not been run locally. A GitHub Actions workflow was added to run GCC and Clang on Linux and MSVC on Windows; that workflow remains unverified until CI executes.
+CMake was installed into the user Python environment for validation. The MinGW Makefiles CMake generator configured and built successfully on Windows, and CTest passed all 24 registered tests. The Linux GCC/Clang and Windows MSVC hosted jobs failed during CMake build in run 42924291210. Local reproduction identified the missing `include/` path on the allocation-failure test target; that has been fixed and the CMake/CTest suite passes locally. Hosted jobs need a rerun to confirm the fix across those toolchains.
 
 ## Sanitizers
 
